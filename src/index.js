@@ -3,12 +3,16 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import Dropzone from 'react-dropzone-uploader';
 import 'react-dropzone-uploader/dist/styles.css';
+import axios from 'axios';
 
 const App = () => {
   return <Standard />;
 };
 
 const Standard = () => {
+  const API_ENDPOINT =
+    'https://3mgeysntek.execute-api.us-east-2.amazonaws.com/default/getPresignedURL';
+
   const getUploadParams = () => {
     return { url: 'https://httpbin.org/post' };
   };
@@ -17,10 +21,28 @@ const Standard = () => {
     // console.log(status, meta);
   };
 
-  const handleSubmit = (files) => {
+  const handleSubmit = async (files) => {
     const f = files[0];
     console.log(f.file);
-    f.remove();
+    // f.remove();
+
+    // * GET request: presigned URL
+    const response = await axios({
+      method: 'GET',
+      url: API_ENDPOINT,
+    });
+
+    console.log('Response', response);
+
+    // * PUT request: upload file to S3
+    const result = await fetch(response.data.uploadURL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/zip',
+      },
+      body: f.file,
+    });
+    console.log('Result: ', result);
   };
 
   return (
